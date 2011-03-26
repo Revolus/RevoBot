@@ -1,0 +1,6 @@
+#! /bin/bash
+# Name the job "testing".
+#$ -N bestandscheck
+# Send email when job finishes.
+#$ -m e
+/usr/bin/env /bin/bash /home/revolus/Bots/runMySqlBestandschecker.sh
