@@ -41,7 +41,7 @@ $homeWiki = 'dewiki_p';
 $sharedWiki = 'commonswiki_p';
 
 $result = mysql_query("
-SELECT -- SLOW OK
+SELECT /* SLOW_OK */
   `page_id`
 FROM
   `page`
@@ -83,7 +83,7 @@ if(!count($stockIds)) {
 }
 
 $result = mysql_query("
-SELECT -- SLOW OK
+SELECT /* SLOW_OK */
   `page_id`, `page_title`, `page_latest`, `rev_timestamp`, `rev_user_text`, `rev_user`,
   `$homeWiki`.`image`.`img_sha1` AS `local`,
   `$sharedWiki`.`image`.`img_sha1` AS `shared`,
@@ -133,7 +133,8 @@ if(count($ignoredIds)) {
 }
 
 $result = mysql_query("
-SELECT `tl_from`, `tl_title` $sqlTemplates
+SELECT /* SLOW_OK */
+ `tl_from`, `tl_title` $sqlTemplates
 FROM `templatelinks`
 WHERE `tl_namespace` = 10 -- Nur Vorlage:
   AND `tl_from` IN (" . implode(', ', $pageIds) /* page_ids sind Zahlen -> nicht sanitizen */ . ")
@@ -236,7 +237,8 @@ foreach(array(NO_DUPLICATE, NO_SHADOWS, NO_NAMED_DUP) as $category) {
 
 if($isIgnoredCommons && $commonsIgnoreCategory) {
   $sql = sprintf('
-      SELECT loc_page.page_id -- SLOW OK
+      SELECT /* SLOW_OK */
+        loc_page.page_id
       FROM page                        loc_page
       JOIN commonswiki_p.page          img_page ON loc_page.page_title = img_page.page_title
       JOIN commonswiki_p.templatelinks tpl_link ON img_page.page_id    = tpl_link.tl_from
@@ -425,12 +427,14 @@ if($sum == 0) {
   }
 } while(false);
 
-mysql_query('
-DELETE FROM
-  `u_revolus`.`bestandscheck`
-WHERE
-  `page_id` IN (' . implode(', ', $stockIds) . ')
-', $link) or fail(mysql_error());
+if($stockIds) {
+	mysql_query('
+	DELETE FROM
+	  `u_revolus`.`bestandscheck`
+	WHERE
+	  `page_id` IN (' . implode(', ', $stockIds) . ')
+	', $link) or fail(mysql_error());
+}
 
 doLog();
 curl_close($curl);

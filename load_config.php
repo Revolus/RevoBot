@@ -340,18 +340,15 @@ curl_setopt($curl, CURLOPT_POST,           true)  or fail('CURLOPT_POST');
 curl_setopt($curl, CURLOPT_RETURNTRANSFER, true)  or fail('CURLOPT_RETURNTRANSFER');
 curl_setopt($curl, CURLOPT_TIMEOUT,        60)    or fail('CURLOPT_TIMEOUT');
 curl_setopt($curl, CURLOPT_ENCODING,       'gzip,deflate')    or fail('CURLOPT_ENCODING');
-curl_setopt($curl, CURLOPT_USERAGENT,      'RevoBot/6.0 (U) toolserver') or fail('CURLOPT_USERAGENT');
+curl_setopt($curl, CURLOPT_USERAGENT,      'Mozilla/5.0 (U) RevoBot/6.0 revolus@toolserver.org') or fail('CURLOPT_USERAGENT');
 curl_setopt($curl, CURLOPT_HTTPHEADER, array(
-  'Accept: */*',
   'Cache-Control: max-age=0',
-  'Connection: keep-alive',
-  'Keep-Alive: 300',
-  'Accept-Charset: utf-8,*',
-  'Accept-Language: de,*'   
+  'Accept-Charset: UTF-8,*',
+  'Connection: Keep-Alive'
 )) or fail('CURLOPT_HTTPHEADER');
 
 curl_setopt($curl, CURLOPT_POSTFIELDS, array(
-  'action' => 'query', 
+  'action' => 'query',
   'prop' => 'revisions',
   'titles' => $configName,
   'rvprop' => 'content|ids',

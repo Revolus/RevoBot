@@ -19,7 +19,7 @@ mysql_query('DELETE FROM `u_revolus`.`bestandscheck`')  or fail(mysql_error());
 $start = 0;
 for(; ;) {
   $query = '
-SELECT
+	  SELECT /* SLOW_OK */
   `page_id`,
   `page_latest`,
   (IF(ISNULL(`dewiki_p`.`image`.`img_sha1`)
