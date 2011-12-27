@@ -19,31 +19,32 @@ mysql_query('DELETE FROM `u_revolus`.`bestandscheck`')  or fail(mysql_error());
 $start = 0;
 for(; ;) {
   $query = '
-	  SELECT /* SLOW_OK */
+SELECT /* SLOW_OK */
   `page_id`,
   `page_latest`,
-  (IF(ISNULL(`dewiki_p`.`image`.`img_sha1`)
-    , IF(EXISTS(SELECT * FROM `commonswiki_p`.`image` WHERE `commonswiki_p`.`image`.`img_name` = `page_title`)
+  (IF(I1.`img_name` IS NULL
+    , IF(NOT I2.`img_name` IS NULL
       , 0 + EXISTS(SELECT * FROM `dewiki_p`.`templatelinks` WHERE (`tl_from` = `page_id`) AND (`tl_namespace` = 10) AND (`tl_title` IN (' . implode(', ', $templates[NO_COMMONS]) . ')))
       , 2 + EXISTS(SELECT * FROM `dewiki_p`.`templatelinks` WHERE (`tl_from` = `page_id`) AND (`tl_namespace` = 10) AND (`tl_title` IN (' . implode(', ', $templates[NO_MISSING]) . ')))
     )
-    , IF(EXISTS(SELECT * FROM `commonswiki_p`.`image` WHERE `commonswiki_p`.`image`.`img_name` = `page_title`)
-        , IF(EXISTS(SELECT * FROM `commonswiki_p`.`image` WHERE (`commonswiki_p`.`image`.`img_name` = `page_title`) AND (`commonswiki_p`.`image`.`img_sha1` = `dewiki_p`.`image`.`img_sha1`))
+    , IF(NOT I2.`img_name` IS NULL
+        , IF(I2.`img_name` <=> I3.`img_name`
           , 4 + EXISTS(SELECT * FROM `dewiki_p`.`templatelinks` WHERE (`tl_from` = `page_id`) AND (`tl_namespace` = 10) AND (`tl_title` IN (' . implode(', ', $templates[NO_DUPLICATE]) . ')))
           , 6 + EXISTS(SELECT * FROM `dewiki_p`.`templatelinks` WHERE (`tl_from` = `page_id`) AND (`tl_namespace` = 10) AND (`tl_title` IN (' . implode(', ', $templates[NO_SHADOWS]) . ')))
         )
-        , IF(EXISTS(SELECT * FROM `commonswiki_p`.`image` WHERE `commonswiki_p`.`image`.`img_sha1` = `dewiki_p`.`image`.`img_sha1`)
+        , IF(NOT I3.`img_name` IS NULL
           , 8 + EXISTS(SELECT * FROM `dewiki_p`.`templatelinks` WHERE (`tl_from` = `page_id`) AND (`tl_namespace` = 10) AND (`tl_title` IN (' . implode(', ', $templates[NO_NAMED_DUP]) . ')))
-          , 10 + EXISTS(SELECT * FROM `dewiki_p`.`templatelinks` WHERE (`tl_from` = `page_id`) AND (`tl_namespace` = 10) AND(`tl_title` IN (' . implode(', ', $templates[ALLOW]) . ')))
+          , 10 + EXISTS(SELECT * FROM `dewiki_p`.`templatelinks` WHERE (`tl_from` = `page_id`) AND (`tl_namespace` = 10) AND (`tl_title` IN (' . implode(', ', $templates[ALLOW]) . ')))
         )
       )
     )
   ) AS `res`
-FROM
-  `dewiki_p`.`page`
-  LEFT OUTER JOIN `dewiki_p`.`image` ON `page_title` = `img_name`
+FROM `dewiki_p`.`page`
+LEFT OUTER JOIN `dewiki_p`.`image`      I1 ON I1.`img_name` = `page_title`
+LEFT OUTER JOIN `commonswiki_p`.`image` I2 ON I2.`img_name` = `page_title`
+LEFT OUTER JOIN `commonswiki_p`.`image` I3 ON I3.`img_sha1` = I1.`img_sha1`
 WHERE `page`.`page_namespace` = 6
-  AND `page`.`page_is_redirect` = 0
+AND `page`.`page_is_redirect` = 0
 LIMIT '.$start.',1000
 ';
   $res = mysql_query($query, $link) or fail(mysql_error());
